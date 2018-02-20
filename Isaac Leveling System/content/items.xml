@@ -1,0 +1,6 @@
+<!--passive cache="cache" name="name" description="description" gfx="graphics" -->
+<!--active cache="cache" name="name" description="description" gfx="graphics" maxcharges="chargesNum" -->
+<!--trinket cache="cache" name="name" description="description" gfx="graphics" -->
+<items gfxroot="gfx/items/" version="1">
+	<passive cache="" name="Crit" description="" gfx="crit.png" />
+</items>
