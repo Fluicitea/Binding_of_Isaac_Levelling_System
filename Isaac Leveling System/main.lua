@@ -55,6 +55,8 @@ local LevelScript = {}
 				--Stats.Experience = Stats.Experience - Stats.MaxExperience -- Sets the experience to the experience it should be
 				Stats.MaxExperience = Stats.MaxExperience + math.floor((math.sqrt(Stats.Level)+Stats.Level) * 5) -- Sets the maximum experience to the next level's maximum experience
 				Stats.Experience = 0 -- Sets the Experience back to 0
+				Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.CRACK_THE_SKY, 0, player.Position, Vector(0,0), player) -- Spawn level up effect
+				sfxManager:Play(SoundEffect.SOUND_HOLY, 1.0, 0, false, 1.0)
 				Stats.Level = Stats.Level + 1 -- Level up the player
 				Points.Points_Stat = Points.Points_Stat + LevelBonus.LEVEL_STAT + Stats.RebirthLevel -- Increases stat points by stat point per level (plus rebirth level if >= 1)
 			end
