@@ -2,25 +2,29 @@
 <metadata>
     <name>Isaac Leveling System</name>
     <directory>isaac leveling system</directory>
-    <id>0</id>
+    <id>1309216260</id>
     <description>Leveling system for Binding of Isaac. 
-Level up by killing enemies, but beware, as your most powerful adversaries are also improving while you are.
+Level up by killing enemies, but beware, as bosses are also improving while you are.
 
 Features:
--Level up your characters by gaining experience from kills.
--Each level, you recieve 5 stat points which you can allocate how you wish.
--Bosses increase their damage and their health based on your current level.
--Critical system: chance to get a critical hit dealing double, triple, or quadruple damage (based on which type of critical hit you did).
--Health overhaul: the heart based health from the base game has been replaced by a numerical system, which can be increased with no limit.
+- Level up your characters by gaining experience from kills.
+- When you level up, crack the sky effect is spawned on the player, and the angelic sound effect plays.
+- Each character has a different level, and also different stat allocation.
+- Each level, you recieve 5 stat points which you can allocate how you wish.
+- Bosses increase their damage and their health based on your current level.
+- Critical system: chance to get a critical hit dealing double, triple, or quadruple damage (based on which type of critical hit you did).
+- Health overhaul: the heart based health from the base game has been replaced by a numerical system, which can be increased with no limit.
+- Rebirth system: When you reach maximum level (level 100), you can rebirth to return to level 1, reset your stats, but gain one extra stat point per level for each rebirth level.
 
 Note: to access the stat menu and increase your stats, press &quot;T&quot;.
 
 Thanks to:
+- Sinsthar, for the amazing menu base.
 - Destroyer55691, a personal friend who gave ideas for how to improve the efficiency of the mod.
+- Pedrin, who play-tested the mod and gave ideas for additional features to include in the mod, and tweaks for user friendliness.
 - Lytebringr, because without seeing his videos I wouldn't have become inspired to create mods.
-- Pedrin, who gave ideas of additional features to include in the mod.
 - And of course, you, for finding interest in the mod and clicking to view it.</description>
-    <version>1.0</version>
+    <version>1.2</version>
     <visibility>Public</visibility>
     <tag id="Lua"/>
     <tag id="Tweaks"/>

@@ -52,9 +52,8 @@ local LevelScript = {}
 				Stats.Experience = Stats.MaxExperience -- Sets the experience to the maximum experience (used for when max level)
 			end
 			if Stats.Experience >= Stats.MaxExperience and Stats.Level < 100 then -- Checks to see in the player has leveled up
-				--Stats.Experience = Stats.Experience - Stats.MaxExperience -- Sets the experience to the experience it should be
+				Stats.Experience = Stats.Experience - Stats.MaxExperience -- Sets the experience to the experience it should be
 				Stats.MaxExperience = Stats.MaxExperience + math.floor((math.sqrt(Stats.Level)+Stats.Level) * 5) -- Sets the maximum experience to the next level's maximum experience
-				Stats.Experience = 0 -- Sets the Experience back to 0
 				Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.CRACK_THE_SKY, 0, player.Position, Vector(0,0), player) -- Spawn level up effect
 				sfxManager:Play(SoundEffect.SOUND_HOLY, 1.0, 0, false, 1.0)
 				Stats.Level = Stats.Level + 1 -- Level up the player
@@ -635,6 +634,37 @@ local StatScript = {}
 						OVERCRIT = 3, -- Overcrit damage multiplier
 						DOUBLE_OVERCRIT = 4 -- Double Overcrit damage multiplier
 					}
+				},
+				Modded = {
+					Stats = {
+						Strength = 15, -- Strength stat
+						Vitality = 15, -- Vitality stat
+						Dexterity = 15, -- Dexterity stat
+						Luck = 0, -- Luck stat
+						Experience = 0, -- Current experience
+						Health = 30, -- Current health
+						ExtraHealth = 0, -- Current extra health (goes above cap)
+						MaxHealth = 30, -- Maximum health
+						HealthDif = 0, -- Health difference due to character, items, etc.
+						EternalArmor = false, -- Has eternal heart armour?
+						GoldenArmor = false, -- Has golden heart armour?
+						Level = 1, -- Current level
+						RebirthLevel = 0, -- Current rebirth level
+						MaxExperience = 100 -- Experience to next level
+					},
+					Points = {
+						Points_Stat = 0, -- Current stat points
+					},
+					CritChance = {
+						CRIT = 0.1, -- Chance of basic crit
+						OVERCRIT = 1, -- Chance of Overcrit
+						DOUBLE_OVERCRIT = 1 -- Chance of double Overcrit
+					},
+					CritDamage = {
+						CRIT = 2, -- Basic crit damage multiplier
+						OVERCRIT = 3, -- Overcrit damage multiplier
+						DOUBLE_OVERCRIT = 4 -- Double Overcrit damage multiplier
+					}
 				}
 			}
 		end
@@ -708,6 +738,11 @@ local StatScript = {}
 			Points = Variables.TheKeeper.Points -- Initialises points variable
 			CritChance = Variables.TheKeeper.CritChance -- Initialises crit chance variable
 			CritDamage = Variables.TheKeeper.CritDamage -- Initialises crit damage variable
+		else
+			Stats = Variables.Modded.Stats -- Initialises stats variable
+			Points = Variables.Modded.Points -- Initialises points variable
+			CritChance = Variables.Modded.CritChance -- Initialises crit chance variable
+			CritDamage = Variables.Modded.CritDamage -- Initialises crit damage variable
 		end
 		-- Set stats according to mod stats --
 		player:AddCacheFlags(CacheFlag.CACHE_DAMAGE) -- Add damage cache flag for evaluation
@@ -727,7 +762,6 @@ local StatScript = {}
 		
 		if game:GetFrameCount() == 1 then -- If game just started
 			-- Ensures player cannot die from heart damage --
-			Stats.Health = Stats.MaxHealth -- Set health to max health
 			if player:GetName() ~= "???" then
 				Stats.ExtraHealth = Stats.ExtraHealth + (player:GetSoulHearts() * 5) -- Set extra health
 			else
@@ -759,22 +793,36 @@ local StatScript = {}
 				if game:GetFrameCount() == 3 then
 					player:AddMaxHearts(14 - player:GetMaxHearts()) -- Set max hearts to 7 hearts
 				else
-					Stats.HealthDif = Stats.HealthDif - ((14 - player:GetMaxHearts()) * 5) -- Change health by heart difference (via health difference stat)
-					Stats.MaxHealth = (round(Stats.Vitality * 2) + Stats.HealthDif) -- Ensures max health is set before health is healed (so health failsafe is not triggered)
-					if player:GetMaxHearts() > 14 then -- Only heal health if it went up
-						Stats.Health = Stats.Health - ((14 - player:GetMaxHearts()) * 5) -- Heals health by health gained
+					if Stats.MaxHealth <= 0 and player:GetMaxHearts() ~= 0 then
+						Stats.HealthDif = Stats.HealthDif + (player:GetMaxHearts() * 5) -- Change health by heart difference (via health difference stat)
+						Stats.MaxHealth = (round(Stats.Vitality * 2) + Stats.HealthDif) -- Ensures max health is set before health is healed (so health failsafe is not triggered)
+						player:AddMaxHearts(14 - player:GetMaxHearts()) -- Set max hearts to 7 hearts
+					elseif Stats.MaxHealth > 0 then
+						Stats.HealthDif = Stats.HealthDif - ((14 - player:GetMaxHearts()) * 5) -- Change health by heart difference (via health difference stat)
+						Stats.MaxHealth = (round(Stats.Vitality * 2) + Stats.HealthDif) -- Ensures max health is set before health is healed (so health failsafe is not triggered)
+						player:AddMaxHearts(14 - player:GetMaxHearts()) -- Set max hearts to 7 hearts
 					end
-					player:AddMaxHearts(14 - player:GetMaxHearts()) -- Set max hearts to 7 hearts
 				end
 			end
-			if player:GetSoulHearts() ~= 0 and Stats.ExtraHealth == 0 then -- If player has soul hearts or black hearts and player has no extra health
-				player:AddBlackHearts(-BlackHearts) -- Remove black hearts
-				player:AddSoulHearts(-(player:GetSoulHearts())) -- Remove soul hearts
-			elseif player:GetSoulHearts() ~= 2 and Stats.ExtraHealth ~= 0 then -- If player soul hearts not 1 soul heart and player has extra health
-				player:AddBlackHearts(-BlackHearts) -- Remove black hearts
-				player:AddSoulHearts(2 - player:GetSoulHearts()) -- Set soul hearts to 1
+			if Stats.MaxHealth <= 0 then
+				player:AddMaxHearts(-player:GetMaxHearts()) -- Set max hearts to 0 hearts
+				Stats.MaxHealth = 0 -- Set max health to 0
 			end
-			if player:GetHearts() ~= 3 and Stats.Health ~= Stats.MaxHealth then -- If player hearts not 1.5 hearts and player health not max health
+			if player:GetSoulHearts() ~= 0 and Stats.ExtraHealth == 0 then -- If player has soul hearts or black hearts and player has no extra health
+				Stats.ExtraHealth = Stats.ExtraHealth + (player:GetSoulHearts()*5) -- Add the number of gained soul hearts to extra health
+				player:AddBlackHearts(-BlackHearts) -- Remove black hearts
+				player:AddSoulHearts(6 - player:GetSoulHearts()) -- Remove soul hearts
+			elseif player:GetSoulHearts() ~= 6 and Stats.ExtraHealth ~= 0 then -- If player soul hearts not 3 soul heart and player has extra health
+				Stats.ExtraHealth = Stats.ExtraHealth - ((6 - player:GetSoulHearts())*5) -- Add the number of gained soul hearts to extra health
+				if Stats.ExtraHealth == 0 then
+					player:AddBlackHearts(-BlackHearts) -- Remove black hearts
+					player:AddSoulHearts(-player:GetSoulHearts()) -- Set soul hearts to 0
+				else
+					player:AddBlackHearts(-BlackHearts) -- Remove black hearts
+					player:AddSoulHearts(6 - player:GetSoulHearts()) -- Set soul hearts to 3
+				end
+			end
+			if player:GetHearts() ~= 3 and Stats.Health ~= Stats.MaxHealth and Stats.Health > 10 then
 				if pData.FromFull ~= false then -- If dropping to 1.5 hearts because health dropping from full or because of game restart (don't want health change from that)
 					pData.FromFull = false -- Set FromFull data to false
 				elseif pData.FromFull == false and player:GetHearts() > 3 then -- If regaining health (not dropping from full health)
@@ -785,6 +833,28 @@ local StatScript = {}
 					end
 				end
 				player:AddHearts(3 - player:GetHearts()) -- Set player hearts to 1.5
+			elseif player:GetHearts() ~= 2 and Stats.Health ~= Stats.MaxHealth and Stats.Health <= 10 and Stats.Health > 5 then
+				if pData.FromFull ~= false then -- If dropping to 1 hearts because health dropping from full or because of game restart (don't want health change from that)
+					pData.FromFull = false -- Set FromFull data to false
+				elseif pData.FromFull == false and player:GetHearts() > 2 then -- If regaining health (not dropping from full health)
+					if player:GetHearts() == player:GetMaxHearts() then
+						Stats.Health = Stats.MaxHealth
+					else
+						Stats.Health = Stats.Health - ((2 - player:GetHearts()) * 5) -- Heal the player
+					end
+				end
+				player:AddHearts(2 - player:GetHearts()) -- Set player hearts to 1
+			elseif player:GetHearts() ~= 1 and Stats.Health ~= Stats.MaxHealth and Stats.Health <= 5 then
+				if pData.FromFull ~= false then -- If dropping to 0.5 hearts because health dropping from full or because of game restart (don't want health change from that)
+					pData.FromFull = false -- Set FromFull data to false
+				elseif pData.FromFull == false and player:GetHearts() > 1 then -- If regaining health (not dropping from full health)
+					if player:GetHearts() == player:GetMaxHearts() then
+						Stats.Health = Stats.MaxHealth
+					else
+						Stats.Health = Stats.Health - ((1 - player:GetHearts()) * 5) -- Heal the player
+					end
+				end
+				player:AddHearts(1 - player:GetHearts()) -- Set player hearts to 0.5
 			elseif player:GetHearts() ~= player:GetMaxHearts() and Stats.Health == Stats.MaxHealth then -- If player health is max health
 				if pData.FromFull ~= true then -- If health regained to full
 					pData.FromFull = true -- Set FromFull data to true
@@ -812,19 +882,7 @@ local StatScript = {}
 				if player:GetName() ~= "The Lost" then -- No picking up hearts for The Lost
 					if entity.Type == EntityType.ENTITY_PICKUP and entity.Variant == PickupVariant.PICKUP_HEART and entity:GetData().Picked == nil and entity:GetSprite():IsPlaying("Collect") then -- If not collected heart pickup and is playing collect animation
 						entity:GetData().Picked = true -- Sets entity has been picked up
-						if entity.SubType == HeartSubType.HEART_HALF_SOUL then -- If entity is half soul heart
-							Stats.ExtraHealth = Stats.ExtraHealth + 5 -- Give player 5 extra health
-						elseif entity.SubType == HeartSubType.HEART_SOUL then -- If entity is soul heart
-							Stats.ExtraHealth = Stats.ExtraHealth + 10 -- Give player 10 extra health
-						elseif entity.SubType == HeartSubType.HEART_BLENDED then -- If entity is blended heart
-							if Stats.Health + 5 <= Stats.MaxHealth then -- If player can only heal for 5 health
-								Stats.ExtraHealth = Stats.ExtraHealth + 5 -- Give player 5 extra health
-							else
-								Stats.ExtraHealth = Stats.ExtraHealth + 10 -- Give player 10 extra health
-							end
-						elseif entity.SubType == HeartSubType.HEART_BLACK then -- If entity is black heart
-							Stats.ExtraHealth = Stats.ExtraHealth + 20 -- Give player 20 extra health
-						elseif entity.SubType == HeartSubType.HEART_ETERNAL then -- If entity is eternal heart
+						if entity.SubType == HeartSubType.HEART_ETERNAL then -- If entity is eternal heart
 							if Stats.EternalArmor == false and Stats.GoldenArmor == false then -- If player doesn't have health armour
 								Stats.EternalArmor = true -- Give player eternal heart health armour
 							end
@@ -849,9 +907,9 @@ local StatScript = {}
 			if player:GetSoulHearts() ~= 0 and Stats.ExtraHealth == 0 then -- If player has soul hearts or black hearts and player has no extra health
 				player:AddBlackHearts(-BlackHearts) -- Remove black hearts
 				player:AddSoulHearts(-(player:GetSoulHearts())) -- Remove soul hearts
-			elseif player:GetSoulHearts() ~= 2 and Stats.ExtraHealth ~= 0 then -- If player soul hearts not 1 soul heart and player has extra health
+			elseif player:GetSoulHearts() ~= 6 and Stats.ExtraHealth ~= 0 then -- If player soul hearts not 3 soul heart and player has extra health
 				player:AddBlackHearts(-BlackHearts) -- Remove black hearts
-				player:AddSoulHearts(2 - player:GetSoulHearts()) -- Set soul hearts to 1
+				player:AddSoulHearts(6 - player:GetSoulHearts()) -- Set soul hearts to 3
 			end
 			if player:GetHearts() ~= player:GetMaxHearts() and Stats.Health == Stats.MaxHealth then -- If player health is max health
 				if pData.FromFull ~= true then -- If health regained to full
@@ -859,6 +917,7 @@ local StatScript = {}
 				end
 				player:SetFullHearts() -- Sets player hearts to full hearts
 			end
+			Stats.Health = Stats.MaxHealth
 			-- Health overhaul end --
 		end
 	end
