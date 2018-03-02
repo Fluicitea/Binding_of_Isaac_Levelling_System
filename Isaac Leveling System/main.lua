@@ -28,6 +28,8 @@ local Stats = {} -- Creates blank stats table
 local Points = {} -- Creates blank points table
 local CritChance = {} -- Creates blank crit chance table
 local CritDamage = {} -- Creates blank crit damage table
+local TrashHPMult = 0 -- Creates HP multiplier variable for trash mobs
+local level = game:GetLevel()
 
 ---------------------
 --   Script for    --
@@ -970,6 +972,10 @@ local StatScript = {}
 		--Increase boss health based on player level --
 		if entity:IsBoss() then
 			entity.MaxHitPoints = entity.MaxHitPoints + (entity.MaxHitPoints * ((Stats.Level-1) * 0.05)) -- Increases maximum hit points of spawned entity
+			entity.HitPoints = entity.MaxHitPoints -- Heals entity to maximum hit points (so that entity starts on max health)
+		else
+			TrashHPMult = ((Stats.Level-1) * 0.2)*((level:GetAbsoluteStage()*0.5)+0.5) -- Sets trash mob HP multiplier
+			entity.MaxHitPoints = entity.MaxHitPoints + (entity.MaxHitPoints * (TrashHPMult * 0.1)) -- Increases maximum hit points of spawned entity
 			entity.HitPoints = entity.MaxHitPoints -- Heals entity to maximum hit points (so that entity starts on max health)
 		end
 	end
