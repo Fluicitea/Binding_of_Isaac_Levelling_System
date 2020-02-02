@@ -174,9 +174,9 @@ local StatScript = {}
 		Isaac.RenderText("Lvl: "..Stats.Level, 270, 250, 1, 1, 1, 1)
 		Isaac.RenderText("Rebirth: "..Stats.RebirthLevel, 190, 250, 1, 1, 1, 1)
 		if Stats.ExtraHealth > 0 then
-			Isaac.RenderText("HP: "..Stats.Health.." + "..Stats.ExtraHealth, 60, 5, 1, 1, 1, 1)
+			Isaac.RenderText("HP: "..Stats.Health.."/"..Stats.MaxHealth.." + "..Stats.ExtraHealth, 60, 5, 1, 1, 1, 1)
 		else
-			Isaac.RenderText("HP: "..Stats.Health, 60, 5, 1, 1, 1, 1)
+			Isaac.RenderText("HP: "..Stats.Health.."/"..Stats.MaxHealth, 60, 5, 1, 1, 1, 1)
 		end
 		-- Stat Rendering end --
 	end
